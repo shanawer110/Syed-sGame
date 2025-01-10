@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Game</title>
+    <link rel="shortcut icon" href="./icon.jpg" type="image/x-icon">
+    <style>
+        /* CSS for the game */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            transition: background-color 0.5s ease;
+        }
+
+        h1{
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border: 2px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .cell:hover {
+            background-color: #ddd;
+        }
+
+        .cell.x::before {
+            content: "X";
+            color: #ff5733;
+        }
+
+        .cell.o::before {
+            content: "O";
+            color: #3498db;
+        }
+
+        .message {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .play-again {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .play-again:hover {
+            background-color: #2980b9;
+        }
+
+        /* Confetti style */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: gold;
+            animation: fall 3s linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100px); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Tic-Tac-Toe</h1>
+    <!-- HTML for the game -->
+    <div class="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+    <div class="message"></div>
+    <button class="play-again" style="display: none;">Play Again</button>
+
+    <script>
+        let currentPlayer = 'x';
+        const cells = document.querySelectorAll('.cell');
+        const messageDiv = document.querySelector('.message');
+        const playAgainButton = document.querySelector('.play-again');
+
+        // Winning combinations
+        const winningCombos = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6],
+        ];
+
+        function createConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function checkWinner() {
+            for (let combo of winningCombos) {
+                const [a, b, c] = combo;
+                if (
+                    cells[a].classList.contains(currentPlayer) &&
+                    cells[b].classList.contains(currentPlayer) &&
+                    cells[c].classList.contains(currentPlayer)
+                ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function isDraw() {
+            return Array.from(cells).every(cell =>
+                cell.classList.contains('x') || cell.classList.contains('o')
+            );
+        }
+
+        function handleClick(e) {
+            const cell = e.target;
+
+            if (!cell.classList.contains('x') && !cell.classList.contains('o')) {
+                cell.classList.add(currentPlayer);
+
+                // Check for winner
+                if (checkWinner()) {
+                    messageDiv.textContent = `Player ${currentPlayer.toUpperCase()} Wins! 🎉`;
+                    document.body.style.backgroundColor = '#d4edda'; // Light green for win
+                    createConfetti(); // Celebration effect
+                    endGame();
+                } else if (isDraw()) {
+                    messageDiv.textContent = `It's a Draw! 😐`;
+                    document.body.style.backgroundColor = '#f8d7da'; // Light red for loss/draw
+                    endGame();
+                } else {
+                    // Switch player
+                    currentPlayer = currentPlayer === 'x' ? 'o' : 'x';
+                }
+            }
+        }
+
+        function endGame() {
+            // Disable further clicks
+            cells.forEach(cell => cell.removeEventListener('click', handleClick));
+            playAgainButton.style.display = 'block';
+        }
+
+        function resetGame() {
+            // Reset the board
+            cells.forEach(cell => {
+                cell.classList.remove('x', 'o');
+                cell.addEventListener('click', handleClick);
+            });
+            currentPlayer = 'x';
+            messageDiv.textContent = '';
+            document.body.style.backgroundColor = '#f0f0f0'; // Reset background color
+            playAgainButton.style.display = 'none';
+        }
+
+        // Add click event to cells
+        cells.forEach(cell => cell.addEventListener('click', handleClick));
+
+        // Add click event to Play Again button
+        playAgainButton.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
